@@ -1,76 +1,116 @@
 import telebot
 import webbrowser
 from telebot import types
-import sqlite3
-import requests
-import json
-from currency_converter import CurrencyConverter
-bot = telebot.TeleBot('7064426376:AAG77ujGzw4H0J_K1wV2EwER-RQACMpROaE')
-#Погода
-API = 'd4eec42b1ebae93c9d2442171be7a91a'
-currency = CurrencyConverter
-amount = 0
+from aiogram import Bot, Dispatcher, executor, types
+#from time import sleep
+#import requests
+#import sqlite3
+#import json
+#from currency_converter import CurrencyConverter
+#bot = telebot.TeleBot('7064426376:AAG77ujGzw4H0J_K1wV2EwER-RQACMpROaE')
+# Погода
+#API = 'd4eec42b1ebae93c9d2442171be7a91a'
+#currency = CurrencyConverter()
+#amount = 0
 
 
-@bot.message_handler(commands=['start'])
-def start(message):
-    bot.send_message(message.chat.id, 'Введіть суму, яку хочете конвертувати')
-    bot.register_next_step_handler(message, summa)
+
+#aiogram
 
 
-@bot.message_handler()
-def summa(message):
-    global amount
-    try:
-        amount = int(message.text.strip())
 
-        if amount > 0:
-            markup = types.InlineKeyboardMarkup(row_width=2)
-            btn1 = types.InlineKeyboardButton('USD/EUR', callback_data='usd/eur')
-            btn2 = types.InlineKeyboardButton('EUR/USD', callback_data='eur/usd')
-            btn3 = types.InlineKeyboardButton('USD/GBP', callback_data='usd/gbp')
-            btn4 = types.InlineKeyboardButton('Інше', callback_data='else')
-            markup.add(btn1, btn2, btn3, btn4)
-            bot.send_message(message.chat.id, "Виберіть валютну пару", reply_markup=markup)
-        else:
-            bot.send_message(message.chat.id, 'Введіть додатнє число!')
-
-    except ValueError:
-        bot.send_message(message.chat.id, 'Будь ласка, введіть число')
+#bot.polling(none_stop=True)
 
 
-@bot.callback_query_handler(lambda call: True)
-def callback(call):
-    values = call.data.upper().split('/')
-    res = currency.convert(amount, values[0], values[1])
-    bot.send_message(call.message.chat.id, f"{res}")
-    bot.send_message(call.message.chat.id, f'Вийшло: {res}')
-    bot.register_next_step_handler(call.message, summa)
-
-
-# #Погода
+#Валютний конвертер
 # @bot.message_handler(commands=['start'])
 # def start(message):
-#     bot.send_message(message.chat.id, 'Привіт! Це бот для показу погоди, напиши назву міста')
-# @bot.message_handler(content_types=['text'])
-# def get_weather(message):
-#     city = message.text.strip().lower()
-#     res = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API}&units=metric')
-#     if res.status_code == 200:
-#         data = json.loads(res.text)
-#         weather = data["weather"][0]["main"]
-#         temp = data["main"]["temp"]
-#         wind = data["wind"]["speed"]
+#     bot.send_message(message.chat.id, 'Введіть суму, яку хочете конвертувати')
+#     bot.register_next_step_handler(message, summa)
 #
-#         bot.reply_to(message, f'Погода зараз:\n{temp} градусів\nПогода: {weather}\nВітер: {wind}')
 #
-#         image = 'warm.png' if temp > 15.0 else 'cold.png'
-#         file = open('./' + image, 'rb')
-#         bot.send_photo(message.chat.id, file)
+# @bot.message_handler()
+# def summa(message):
+#     global amount
+#     try:
+#         amount = int(message.text.strip())
+#
+#         if amount > 0:
+#             markup = types.InlineKeyboardMarkup(row_width=2)
+#             btn1 = types.InlineKeyboardButton('USD/EUR', callback_data='USD/EUR')
+#             btn2 = types.InlineKeyboardButton('EUR/USD', callback_data='EUR/USD')
+#             btn3 = types.InlineKeyboardButton('USD/GBP', callback_data='USD/GBP')
+#             btn4 = types.InlineKeyboardButton('Інше', callback_data='else')
+#             markup.add(btn1, btn2, btn3, btn4)
+#             bot.send_message(message.chat.id, "Виберіть валютну пару", reply_markup=markup)
+#         else:
+#             bot.send_message(message.chat.id, 'Введіть додатнє число!')
+#
+#     except ValueError:
+#         time.sleep(1)
+#         bot.send_message(message.chat.id, 'Будь ласка, введіть число')
+#         time.sleep(3)
+#         bot.register_next_step_handler(message, summa)
+#
+#
+# @bot.callback_query_handler(lambda call: True)
+# def callback(call):
+#     global amount
+#     if call.data != 'else':
+#         values = call.data.split('/')
+#         res = currency.convert(amount, values[0], values[1])
+#         bot.send_message(call.message.chat.id, f'Вийшло: {round(res, 2)}')
+#         bot.register_next_step_handler(call.message, summa)
 #     else:
-#         bot.reply_to(message, f'Місто вказано неправильно')
+#         bot.send_message(call.message.chat.id, "Введіть валютну пару через /. Наприклад: USD/EUR")
+#         bot.register_next_step_handler(call.message, my_currency)
+#
+#
+# def my_currency(message):
+#     global values
+#     values = message.text.upper()
+#     if values == 'STOP':
+#         bot.register_next_step_handler(message, summa)
+#     else:
+#         try:
+#             values = message.text.upper().split('/')
+#             res = currency.convert(amount, values[0], values[1])
+#             bot.send_message(message.chat.id, f'Вийшло: {round(res, 2)}')
+#             time.sleep(1)
+#             bot.register_next_step_handler(message, summa)
+#         except Exception:
+#             bot.send_message(message.chat.id, f'Невірне значення валютної пари: {values}, перевірте його правильність')
+#             bot.register_next_step_handler(message, my_currency)
 
 
+#Погода
+@bot.message_handler(commands=['start'])
+def start(message):
+    bot.send_message(message.chat.id, 'Привіт! Це бот для показу погоди, напиши назву міста')
+@bot.message_handler(content_types=['text'])
+def get_weather(message):
+    city = message.text.strip().lower()
+    res = requests.get(f'https://api.openweathermap.org/data/2.5/weather?q={city}&appid={API}&units=metric')
+    if res.status_code == 200:
+        data = json.loads(res.text)
+        weather = data["weather"][0]["main"]
+        temp = data["main"]["temp"]
+        wind = data["wind"]["speed"]
+        pressure = data['main']['pressure']
+        wind_deg = data["wind"]['deg']
+        dust = data['wind']['gust']
+        humidity = data['main']['humidity']
+
+        bot.reply_to(message, f'Погода зараз:\n{temp} градусів\nПогода: {weather}\nВітер: {wind}\nНапрям вітру: {wind_deg}\nТиск: {pressure}\nПорив вітру: {dust}\nВологість: {humidity}')
+
+        image = 'warm.png' if temp > 15.0 else 'cold.png'
+        file = open('./' + image, 'rb')
+        bot.send_photo(message.chat.id, file)
+    else:
+        bot.reply_to(message, f'Місто вказано неправильно')
+
+
+#db
 # name = None
 #
 #
@@ -130,6 +170,7 @@ def callback(call):
 #     conn.close()
 
 
+#huta
 # @bot.message_handler(commands=['start'])
 # def start(message):
 #     markup = types.ReplyKeyboardMarkup()
@@ -181,5 +222,3 @@ def callback(call):
 #         bot.send_message(message.chat.id, f'Привіт {message.from_user.first_name}')
 #     if message.text.lower() == 'id':
 #         bot.reply_to(message, f'ID: {message.from_user.id}')
-
-bot.polling(none_stop=True)
